@@ -2,6 +2,7 @@ import json
 import re
 
 from pyrogram import filters
+from pyrogram.raw.functions.account import UpdateStatus
 
 from bot import alemiBot
 
@@ -75,20 +76,13 @@ async def trigger_cmd(client, message):
 	if changed:
 		serialize()
 
-@alemiBot.on_message(group=8)
+@alemiBot.on_message(~filters.me & ~filters.bot & ~filters.edited & (filters.text | filters.caption), group=8)
 async def search_triggers(client, message):
 	global TRIGGERS
-	if is_me(message) or message.edit_date is not None: # TODO allow triggers for self?
-		return # pyrogram gets edit events as message events!
-	if message.chat is None or (message.from_user and message.from_user.is_bot):
-		return # messages with no chat or from bots should not cause triggers
 	if message.chat.type != "private" and not message.mentioned:
 		return # in groups only get triggered in mentions
-	msg_txt = get_text(message).lower()
-	if msg_txt == "":
-		return
 	for key in TRIGGERS:
 		if TRIGGERS[key]["pattern"].search(get_text(message)):
 			await message.reply(TRIGGERS[key]["reply"])
-			await client.set_offline()
+			await client.send(UpdateStatus(offline=True))
 			logger.info("T R I G G E R E D")

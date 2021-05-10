@@ -49,10 +49,9 @@ HELP.add_help(["trigger", "trig"], "register a new trigger",
 @set_offline
 async def trigger_cmd(client, message):
 	global TRIGGERS
-	args = message.command
 
 	changed = False
-	if "-list" in args["flags"]:
+	if message.command["-list"]:
 		logger.info("Listing triggers")
 		out = ""
 		for t in TRIGGERS:
@@ -60,15 +59,15 @@ async def trigger_cmd(client, message):
 		if out == "":
 			out += "` → Nothing to display`"
 		await edit_or_reply(message, out)
-	elif "new" in args and "arg" in args:
+	elif "new" in message.command and message.command.text:
 		logger.info("New trigger")
-		pattern = re.compile(args["new"])
-		TRIGGERS[args["new"]] = { "pattern": pattern, "reply" : args["arg"] }
+		pattern = re.compile(message.command["new"])
+		TRIGGERS[message.command["new"]] = { "pattern": pattern, "reply" : message.command.text }
 		await edit_or_reply(message, f"` → ` New trigger `{pattern.pattern}`")
 		changed = True
-	elif "del" in args:
+	elif "del" in message.command:
 		logger.info("Removing trigger")
-		if TRIGGERS.pop(args["del"], None) is not None:
+		if TRIGGERS.pop(message.command["del"], None) is not None:
 			await edit_or_reply(message, "` → ` Removed trigger")
 			changed = True
 	else:
